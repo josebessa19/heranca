@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Partilha de Herança</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Simulador de Partilha de Herança</h1>
+        <form id="herancaForm">
+            <!-- Secção 1: Informação Base sobre o Falecido e a Situação Geral -->
+            <fieldset id="seccao1">
+                <legend>Informações sobre o Falecido</legend>
+
+                <div>
+                    <label>O falecido deixou testamento?</label>
+                    <input type="radio" id="testamentoSim" name="deixou_testamento" value="sim" required>
+                    <label for="testamentoSim">Sim</label>
+                    <input type="radio" id="testamentoNao" name="deixou_testamento" value="nao">
+                    <label for="testamentoNao">Não</label>
+                </div>
+
+                <div>
+                    <label for="estado_civil">Qual era o estado civil do falecido à data do óbito?</label>
+                    <select id="estado_civil" name="estado_civil" required>
+                        <option value="" disabled selected>Selecione...</option>
+                        <option value="solteiro">Solteiro(a)</option>
+                        <option value="casado">Casado(a)</option>
+                        <option value="unido_facto">Unido(a) de Facto</option>
+                        <option value="divorciado">Divorciado(a)</option>
+                        <option value="viuvo">Viúvo(a)</option>
+                    </select>
+                </div>
+
+                <div id="regime_bens_div" style="display: none;">
+                    <label for="regime_bens">Se casado(a), qual era o regime de bens do casamento?</label>
+                    <select id="regime_bens" name="regime_bens">
+                        <option value="" disabled selected>Selecione...</option>
+                        <option value="comunhao_adquiridos">Comunhão de Adquiridos</option>
+                        <option value="comunhao_geral">Comunhão Geral de Bens</option>
+                        <option value="separacao_bens">Separação de Bens</option>
+                        <option value="outro">Outro</option>
+                    </select>
+                    <p class="tooltip">Esta informação é crucial para determinar quais bens eram próprios do falecido e quais eram comuns do casal.</p>
+                </div>
+            </fieldset>
+
+            <!-- Secção 2: Herdeiros Legitimários Principais -->
+            <fieldset id="seccao2" style="display: none;">
+                <legend>Herdeiros Legitimários</legend>
+
+                <div>
+                    <label>O falecido deixou cônjuge (ou unido de facto) sobrevivo?</label>
+                    <input type="radio" id="conjugeSobrevivoSim" name="conjuge_sobrevivo" value="sim" required>
+                    <label for="conjugeSobrevivoSim">Sim</label>
+                    <input type="radio" id="conjugeSobrevivoNao" name="conjuge_sobrevivo" value="nao">
+                    <label for="conjugeSobrevivoNao">Não</label>
+                </div>
+
+                <div>
+                    <label>O falecido deixou filhos?</label>
+                    <input type="radio" id="deixouFilhosSim" name="deixou_filhos" value="sim" required>
+                    <label for="deixouFilhosSim">Sim</label>
+                    <input type="radio" id="deixouFilhosNao" name="deixou_filhos" value="nao">
+                    <label for="deixouFilhosNao">Não</label>
+                </div>
+
+                <div id="quantos_filhos_div" style="display: none;">
+                    <label for="quantos_filhos">Quantos filhos deixou o falecido?</label>
+                    <input type="number" id="quantos_filhos" name="quantos_filhos" min="1">
+                </div>
+
+                <div id="deixou_ascendentes_div" style="display: none;">
+                    <label>Se o falecido NÃO deixou filhos, deixou ascendentes vivos (pais ou avós)?</label>
+                    <input type="radio" id="ascendentesSim" name="deixou_ascendentes" value="sim">
+                    <label for="ascendentesSim">Sim</label>
+                    <input type="radio" id="ascendentesNao" name="deixou_ascendentes" value="nao">
+                    <label for="ascendentesNao">Não</label>
+                </div>
+            </fieldset>
+
+            <!-- Secção 3: Detalhes do Património (Bens e Dívidas) -->
+            <fieldset id="seccao3" style="display: none;">
+                <legend>Património da Herança</legend>
+
+                <div>
+                    <label for="valor_bens">Valor total estimado dos bens deixados pelo falecido (Relictum):</label>
+                    <input type="number" id="valor_bens" name="valor_bens" step="any" required placeholder="€">
+                    <p class="tooltip">Inclua o valor de imóveis, dinheiro, investimentos, veículos, etc., que eram do falecido ou a sua meação nos bens comuns (se casado em regime de comunhão).</p>
+                </div>
+
+                <div>
+                    <label for="valor_dividas">Valor total das dívidas e encargos da herança (Passivo):</label>
+                    <input type="number" id="valor_dividas" name="valor_dividas" step="any" required placeholder="€">
+                    <p class="tooltip">Inclua empréstimos, despesas de funeral, impostos em dívida, etc.</p>
+                </div>
+            </fieldset>
+
+            <!-- Secção 4: Doações Feitas em Vida pelo Falecido -->
+            <fieldset id="seccao4" style="display: none;">
+                <legend>Doações Feitas em Vida pelo Falecido</legend>
+
+                <div>
+                    <label>O falecido fez doações em vida a descendentes (filhos, netos)?</label>
+                    <input type="radio" id="doacoesDescendentesSim" name="doacoes_descendentes" value="sim" required>
+                    <label for="doacoesDescendentesSim">Sim</label>
+                    <input type="radio" id="doacoesDescendentesNao" name="doacoes_descendentes" value="nao">
+                    <label for="doacoesDescendentesNao">Não</label>
+                </div>
+
+                <div id="valor_doacoes_descendentes_div" style="display: none;">
+                    <label for="valor_doacoes_descendentes">Qual o valor total das doações feitas a descendentes?</label>
+                    <input type="number" id="valor_doacoes_descendentes" name="valor_doacoes_descendentes" step="any" placeholder="€">
+                </div>
+
+                <div id="dispensa_colacao_div" style="display: none;">
+                    <label>Alguma dessas doações a descendentes foi feita com dispensa expressa de colação?</label>
+                    <input type="radio" id="dispensaColacaoSim" name="dispensa_colacao_descendentes" value="sim">
+                    <label for="dispensaColacaoSim">Sim</label>
+                    <input type="radio" id="dispensaColacaoNao" name="dispensa_colacao_descendentes" value="nao">
+                    <label for="dispensaColacaoNao">Não</label>
+                    <input type="radio" id="dispensaColacaoParcialmente" name="dispensa_colacao_descendentes" value="parcialmente">
+                    <label for="dispensaColacaoParcialmente">Parcialmente</label>
+                </div>
+
+                <div id="valor_doacoes_com_dispensa_div" style="display: none;">
+                    <label for="valor_doacoes_com_dispensa">Se sim ou parcialmente, qual o valor total das doações a descendentes feitas COM dispensa de colação?</label>
+                    <input type="number" id="valor_doacoes_com_dispensa" name="valor_doacoes_com_dispensa" step="any" placeholder="€">
+                </div>
+
+                <div>
+                    <label>O falecido fez doações em vida a outras pessoas (que não descendentes) ou instituições?</label>
+                    <input type="radio" id="doacoesOutrasPessoasSim" name="doacoes_outras_pessoas" value="sim" required>
+                    <label for="doacoesOutrasPessoasSim">Sim</label>
+                    <input type="radio" id="doacoesOutrasPessoasNao" name="doacoes_outras_pessoas" value="nao">
+                    <label for="doacoesOutrasPessoasNao">Não</label>
+                </div>
+
+                <div id="valor_doacoes_outras_pessoas_div" style="display: none;">
+                    <label for="valor_doacoes_outras_pessoas">Qual o valor total dessas doações a não descendentes?</label>
+                    <input type="number" id="valor_doacoes_outras_pessoas" name="valor_doacoes_outras_pessoas" step="any" placeholder="€">
+                </div>
+
+            </fieldset>
+
+            <!-- Secção 5: Detalhes do Testamento (se aplicável) -->
+            <fieldset id="seccao5" style="display: none;">
+                <legend>Disposições Testamentárias</legend>
+                
+                <div>
+                    <label for="valor_bens_testamento">Qual o valor total dos bens ou quotas deixados em testamento a todos os beneficiários (herdeiros ou legatários)?</label>
+                    <input type="number" id="valor_bens_testamento" name="valor_bens_testamento" step="any" placeholder="€">
+                    <p class="tooltip">Some o valor de todos os legados e heranças instituídas no testamento.</p>
+                </div>
+            </fieldset>
+
+            <!-- Resultado da Simulação virá aqui -->
+
+            <button type="button" id="btnProximoS1" class="form-button">Próximo (S1 → S2)</button>
+            <button type="button" id="btnProximoS2" class="form-button" style="display: none;">Próximo (S2 → S3)</button>
+            <button type="button" id="btnProximoS3" class="form-button" style="display: none;">Próximo (S3 → S4)</button>
+            <button type="button" id="btnProximoS4" class="form-button" style="display: none;">Próximo (S4 → S5/Calcular)</button>
+            <button type="submit" id="btnCalcular" class="form-button" style="display: none;">Calcular Simulação</button>
+        </form>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html> 

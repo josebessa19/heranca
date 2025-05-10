@@ -1,0 +1,127 @@
+1.  **Calcular o valor total da herança para efeitos de cálculo da legítima (Relictum - Passivo + Donatum).**
+
+    *   **O que é:** Este é o primeiro e mais crucial cálculo para determinar a base sobre a qual as quotas protegidas por lei (legítima) serão calculadas. Não é necessariamente o valor líquido final a partilhar, mas sim o valor de referência para proteger os herdeiros legitimários.
+    *   **Relictum (R):**
+        *   **Significado:** Palavra latina para "o que foi deixado". Refere-se ao valor de todos os bens (imóveis, dinheiro em contas bancárias, ações, veículos, obras de arte, joias, etc.) que o falecido possuía no momento da sua morte.
+        *   **Na Prática da Ferramenta:** O utilizador terá de inserir o valor estimado de cada bem pertencente ao falecido. É importante considerar o valor de mercado à data do óbito.
+    *   **Passivo (P):**
+        *   **Significado:** Refere-se a todas as dívidas e encargos da herança.
+        *   **Exemplos:** Empréstimos bancários em nome do falecido, dívidas fiscais, despesas de funeral e sufrágios (missas, etc.), despesas com o testamento, dívidas a credores, etc.
+        *   **Na Prática da Ferramenta:** O utilizador listará e somará todas estas dívidas.
+    *   **Donatum (D):**
+        *   **Significado:** Refere-se ao valor dos bens que o falecido doou em vida. Esta soma é importante para reconstituir ficticiamente o património do falecido, como se essas doações não tivessem ocorrido. O objetivo é evitar que o testador contorne as regras da legítima, doando grande parte do seu património em vida para prejudicar os herdeiros legitimários.
+        *   **Quais doações entram?** Principalmente doações feitas a descendentes (que estão sujeitas a colação, como veremos) e doações a terceiros que possam vir a ser consideradas inoficiosas (ou seja, que excedam a quota disponível). Pequenos presentes de uso corrente ou de acordo com os costumes sociais não costumam entrar aqui.
+        *   **Na Prática da Ferramenta:** O utilizador precisará listar as doações significativas feitas pelo falecido, especialmente a descendentes ou a estranhos à herança, e o seu valor (atualizado à data da abertura da sucessão, se possível, embora para a simulação o valor à data da doação possa ser um ponto de partida).
+    *   **Fórmula:** `Valor da Herança para Cálculo da Legítima (VTH) = Relictum - Passivo + Donatum`
+    *   **Exemplo Simples:**
+        *   Bens deixados (R) = 200.000€
+        *   Dívidas (P) = 30.000€
+        *   Doações em vida a um filho (D) = 50.000€
+        *   VTH = 200.000 - 30.000 + 50.000 = 220.000€
+        É sobre estes 220.000€ que se calcularão as quotas (legítima e disponível).
+
+2.  **Determinar a existência e a quota dos herdeiros legitimários.**
+
+    *   **O que é:** Identificar quem são os herdeiros que a lei protege e qual a porção da herança (calculada sobre o VTH do ponto 1) que lhes está reservada.
+    *   **Quem são os Herdeiros Legitimários:**
+        *   Cônjuge (ou unido de facto em algumas circunstâncias, embora a lei da sucessão se refira primariamente ao cônjuge)
+        *   Descendentes (filhos; se um filho for pré-falecido, os seus descendentes – netos do falecido – entram por direito de representação)
+        *   Ascendentes (pais; na falta destes, avós. Só são chamados se não houver descendentes).
+    *   **Quota (Fração da Legítima):** A lei define frações fixas do VTH:
+        *   Cônjuge e filhos: **2/3** do VTH.
+        *   Cônjuge (sem filhos) e ascendentes: **2/3** do VTH.
+        *   Cônjuge apenas (sem filhos nem ascendentes): **1/2** do VTH.
+        *   Um só filho (sem cônjuge): **1/2** do VTH.
+        *   Dois ou mais filhos (sem cônjuge): **2/3** do VTH.
+        *   Ascendentes apenas (pais): **1/2** do VTH.
+        *   Ascendentes apenas (avós ou outros): **1/3** do VTH.
+    *   **Na Prática da Ferramenta:** A ferramenta perguntará:
+        *   O falecido deixou cônjuge?
+        *   Quantos filhos deixou? (E se algum é pré-falecido, se deixou descendentes).
+        *   Se não deixou filhos, deixou pais? Avós?
+        Com base nas respostas, a ferramenta seleciona a fração correta.
+
+3.  **Calcular a Quota Legítima e a Quota Disponível.**
+
+    *   **O que é:** Dividir o VTH (calculado no ponto 1) nas duas grandes fatias da herança.
+    *   **Quota Legítima (QL):**
+        *   **Cálculo:** `QL = VTH * Fração da Legítima` (determinada no ponto 2).
+        *   **Significado:** É a porção da herança que está "blindada" para os herdeiros legitimários. O testador não pode dispor dela livremente para prejudicar estes herdeiros.
+        *   **Exemplo (continuando o anterior, VTH = 220.000€, falecido com cônjuge e 2 filhos):**
+            *   Fração da Legítima = 2/3
+            *   QL = 220.000€ * (2/3) = 146.666,67€
+    *   **Quota Disponível (QD):**
+        *   **Cálculo:** `QD = VTH - QL` (ou `QD = VTH * (1 - Fração da Legítima)`).
+        *   **Significado:** É a porção da herança de que o falecido podia dispor livremente em testamento, beneficiando quem quisesse (sejam herdeiros legitimários ou não).
+        *   **Exemplo:**
+            *   QD = 220.000€ - 146.666,67€ = 73.333,33€
+            *   Ou QD = 220.000€ * (1/3) = 73.333,33€
+
+4.  **Se houver testamento:**
+
+    *   **4.1. Verificar se as disposições testamentárias respeitam a quota legítima.**
+        *   **O que é:** O testador pode ter feito deixas (heranças ou legados) no seu testamento. É preciso verificar se o valor total dessas deixas (somado a eventuais doações em vida a não herdeiros legitimários, ou a herdeiros legitimários com dispensa de colação para além da sua quota na legítima) excede a Quota Disponível (QD).
+        *   **Inoficiosidade:** Se as liberalidades (deixas testamentárias + doações que afetam a legítima) excederem a QD, invadindo a QL, são chamadas "inoficiosas".
+        *   **Consequência:** As liberalidades inoficiosas são reduzidas até que a QL fique intacta. A redução começa pelas disposições testamentárias e, se não for suficiente, avança para as doações em vida (da mais recente para a mais antiga).
+        *   **Na Prática da Ferramenta:** A ferramenta somaria o valor das deixas e compararia com a QD. Se exceder, alertaria para a inoficiosidade e para a necessidade de redução (a simulação pode indicar quais seriam reduzidas).
+    *   **4.2. Atribuir os bens da quota disponível conforme o testamento.**
+        *   **O que é:** Depois de garantir que a QL está respeitada (após eventuais reduções por inoficiosidade), a ferramenta simularia a atribuição dos bens ou valores indicados no testamento aos beneficiários designados, utilizando a QD.
+        *   Os beneficiários podem ser os próprios herdeiros legitimários (recebendo algo "por fora" da sua legítima) ou terceiros.
+    *   **4.3. Distribuir a quota legítima pelos herdeiros legitimários.**
+        *   **O que é:** A QL é então dividida entre os herdeiros legitimários identificados, de acordo com as regras legais de partilha *dentro* desse grupo.
+        *   **Exemplo (cônjuge e 2 filhos, QL = 146.666,67€):**
+            *   A lei diz que cônjuge e filhos dividem por cabeça (em partes iguais), mas a quota do cônjuge não pode ser inferior a 1/4 da herança (neste caso, 1/4 da QL, ou mais precisamente, 1/4 do valor que compõe a herança a partilhar entre eles).
+            *   Neste caso, dividem em 3 partes iguais: 146.666,67€ / 3 = 48.888,89€ para cada um (cônjuge, filho A, filho B). A quota do cônjuge (48.888,89€) é superior a 1/4 da QL (146.666,67€ / 4 = 36.666,67€), logo está correto.
+
+5.  **Se não houver testamento (ou este for parcial/ineficaz):**
+
+    *   **Aplicar as regras da sucessão legítima para distribuir toda a herança (ou a parte não coberta pelo testamento).**
+        *   **O que é:** Se não há testamento, ou se o testamento não dispõe de todos os bens da quota disponível, a totalidade da herança (Relictum - Passivo) ou a parte remanescente será distribuída conforme a ordem e as regras da sucessão legítima.
+        *   **Ordem de Sucessão Legítima (relembrando):**
+            1.  Cônjuge e descendentes.
+            2.  Cônjuge e ascendentes.
+            3.  Irmãos e seus descendentes.
+            4.  Outros colaterais até ao 4º grau.
+            5.  Estado.
+        *   **Na Prática da Ferramenta:** A ferramenta identificaria a classe de herdeiros prioritária e aplicaria as regras de divisão dessa classe.
+            *   **Exemplo (sem testamento, falecido com cônjuge e 2 filhos, valor da herança (R-P) = 170.000€):**
+                *   Herdeiros: Cônjuge e 2 filhos.
+                *   Divisão: Por cabeça, cônjuge não menos de 1/4.
+                *   170.000€ / 3 = 56.666,67€ para cada. O cônjuge recebe 56.666,67€ (que é > 1/4 de 170.000€).
+
+6.  **Considerar a colação para ajustar as quotas dos descendentes.**
+
+    *   **O que é:** A colação é o ato pelo qual os descendentes que receberam doações em vida do falecido "trazem" (contabilisticamente) o valor dessas doações de volta à massa da herança para partilhar com os outros descendentes. O objetivo é igualar as partilhas entre eles, pois presume-se que a doação foi um adiantamento da herança.
+    *   **Como funciona:** O valor doado (o "Donatum" que já entrou no cálculo do VTH) é imputado na quota-parte do descendente donatário.
+        *   Se a doação for menor que a sua quota, ele recebe a diferença.
+        *   Se for maior, ele pode não receber mais nada ou, em casos extremos, ter de compensar os outros herdeiros se a doação exceder a sua quota hereditária mais a parte da quota disponível que lhe caberia (se o doador não o tiver dispensado da colação).
+    *   **Dispensa de Colação:** O doador pode, no ato da doação ou em testamento, dispensar o descendente da colação. Essa dispensa significa que a doação não é considerada um adiantamento, mas sim uma liberalidade feita pela quota disponível. No entanto, essa dispensa só é válida até ao limite da QD; se ofender a legítima dos outros herdeiros legitimários, é reduzida.
+    *   **Na Prática da Ferramenta:** Se houve doações a descendentes (identificadas no "Donatum"), a ferramenta perguntaria se houve dispensa de colação.
+        *   Se não houve dispensa: O valor doado é subtraído da parte que caberia a esse descendente na partilha da legítima (e da QD, se for o caso).
+        *   Se houve dispensa: A doação é considerada como saindo da quota disponível. Se exceder a QD, pode ser reduzida.
+
+7.  **Considerar o direito de representação.**
+
+    *   **O que é:** Se um herdeiro legal (tipicamente um filho ou um irmão do falecido) não pode aceitar a herança (porque morreu antes do autor da sucessão) ou não quer (porque repudia), os seus próprios descendentes são chamados a ocupar o seu lugar, herdando a quota que lhe caberia.
+    *   **Quem representa:**
+        *   Na linha reta descendente: os descendentes do filho pré-morto ou que repudiou (netos, bisnetos do falecido).
+        *   Na linha colateral: os filhos do irmão pré-morto ou que repudiou (sobrinhos do falecido por via desse irmão).
+    *   **Como funciona:** A quota que caberia ao "representado" é dividida em partes iguais pelos seus descendentes ("representantes").
+    *   **Na Prática da Ferramenta:** Para cada filho do falecido, a ferramenta perguntaria se está vivo. Se a resposta for "não", perguntaria se deixou descendentes. Se sim, esses descendentes partilhariam entre si a quota que seria do filho pré-morto. O mesmo para irmãos, se aplicável.
+
+8.  **Indicar a potencial incidência de Imposto do Selo para cada herdeiro não isento.**
+
+    *   **O que é:** Em Portugal, as transmissões gratuitas de bens por morte (heranças e legados) estão sujeitas a Imposto do Selo (IS).
+    *   **Isenções:** Estão isentos do pagamento deste imposto:
+        *   Cônjuge ou unido de facto.
+        *   Descendentes (filhos, netos).
+        *   Ascendentes (pais, avós).
+    *   **Quem Paga (Não Isentos):** Todos os outros herdeiros ou legatários (ex: irmãos, sobrinhos, tios, primos, amigos, instituições).
+    *   **Taxa:** A taxa é de **10%** sobre o valor líquido dos bens recebidos por cada herdeiro/legatário não isento.
+    *   **Adicional sobre Imóveis de Luxo:** Acresce uma taxa de 0,8% sobre o valor de aquisição gratuita de prédios urbanos (ou frações) cujo valor tributável exceda 1.000.000€, aplicável a todos os herdeiros, mesmo os isentos da taxa geral de 10%. (A ferramenta pode apenas mencionar isto como um ponto de atenção).
+    *   **Na Prática da Ferramenta:** Após calcular a quota-parte final de cada herdeiro/legatário, a ferramenta verificaria se ele pertence ao grupo dos isentos.
+        *   Se for isento: IS = 0€.
+        *   Se não for isento: IS = 10% * (Valor da sua quota-parte líquida).
+        A ferramenta apresentaria este valor como um custo estimado para esse herdeiro.
+
+Ao implementar esta lógica, a sua ferramenta poderá fornecer uma simulação bastante informativa, mas é crucial incluir sempre um aviso de que os resultados são meramente indicativos e não substituem o aconselhamento jurídico especializado, dada a complexidade e as particularidades de cada caso real.

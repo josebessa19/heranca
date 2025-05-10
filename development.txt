@@ -1,0 +1,118 @@
+**Ordem de Inputs Sugerida (com foco na fluidez):**
+
+Pense nisto como uma série de "ecrãs" ou secções no seu formulário HTML.
+
+**Secção 1: Informação Base sobre o Falecido e a Situação Geral**
+
+*   **Título da Secção:** "Informações sobre o Falecido"
+*   **Inputs:**
+    1.  **"O falecido deixou testamento?"**
+        *   Tipo: Radio buttons (`<input type="radio">`)
+        *   Opções: "Sim" / "Não"
+        *   *Lógica:* A resposta aqui pode influenciar a apresentação de secções futuras (ex: detalhes do testamento).
+    2.  **"Qual era o estado civil do falecido à data do óbito?"**
+        *   Tipo: Dropdown (`<select>`)
+        *   Opções:
+            *   Solteiro(a)
+            *   Casado(a)
+            *   Unido(a) de Facto
+            *   Divorciado(a)
+            *   Viúvo(a)
+        *   *Lógica:* Se "Casado(a)", mostrar o próximo input.
+    3.  **"Se casado(a), qual era o regime de bens do casamento?"** (Mostrar apenas se o anterior for "Casado(a)")
+        *   Tipo: Dropdown (`<select>`)
+        *   Opções:
+            *   Comunhão de Adquiridos (regime supletivo)
+            *   Comunhão Geral de Bens
+            *   Separação de Bens
+            *   Outro (com campo de texto para especificar, se quiser ir a esse detalhe, mas para simplificar pode omitir "Outro" inicialmente)
+        *   *Ajuda (tooltip/texto pequeno):* "Esta informação é crucial para determinar quais bens eram próprios do falecido e quais eram comuns do casal."
+
+**Secção 2: Herdeiros Legitimários Principais**
+
+*   **Título da Secção:** "Herdeiros Legitimários"
+*   **Inputs:**
+    4.  **"O falecido deixou cônjuge (ou unido de facto) sobrevivo?"**
+        *   Tipo: Radio buttons (`<input type="radio">`)
+        *   Opções: "Sim" / "Não"
+    5.  **"O falecido deixou filhos?"**
+        *   Tipo: Radio buttons (`<input type="radio">`)
+        *   Opções: "Sim" / "Não"
+        *   *Lógica:* Se "Sim", mostrar o próximo input.
+    6.  **"Quantos filhos deixou o falecido?"** (Mostrar apenas se o anterior for "Sim")
+        *   Tipo: Campo numérico (`<input type="number" min="1">`)
+        *   *Lógica:* Com base neste número, poderá gerar dinamicamente (com JavaScript no frontend ou preparar no backend) campos para cada filho na próxima secção, se decidir detalhar cada filho individualmente para direito de representação. Para uma primeira fase, pode manter simples e não detalhar cada filho.
+    7.  **"Se o falecido NÃO deixou filhos, deixou ascendentes vivos (pais ou avós)?"** (Mostrar apenas se o input 5 for "Não")
+        *   Tipo: Radio buttons (`<input type="radio">`)
+        *   Opções: "Sim" / "Não"
+        *   *Lógica:* Se "Sim", pode ter um campo para especificar (ex: "Pais (ambos)", "Pai", "Mãe", "Avós"). Para uma primeira fase, um "Sim" pode ser suficiente para a lógica de cálculo.
+
+**Secção 3: Detalhes do Património (Bens e Dívidas)**
+
+*   **Título da Secção:** "Património da Herança"
+*   **Inputs:**
+    8.  **Bens Deixados (Relictum):**
+        *   **"Valor total estimado dos bens deixados pelo falecido (Relictum):"**
+            *   Tipo: Campo numérico (`<input type="number" step="any">`) com símbolo de moeda (€).
+            *   *Abordagem Simplificada (Fase 1):* Um único campo para o valor total.
+            *   *Abordagem Detalhada (Fase Futura):* Uma secção para adicionar múltiplos bens com descrição e valor (ex: "Imóvel X - Valor: ZZZ€", "Conta Bancária Y - Valor: WWW€"). Para a primeira fase, o total é mais prático.
+        *   *Ajuda (tooltip/texto pequeno):* "Inclua o valor de imóveis, dinheiro, investimentos, veículos, etc., que eram do falecido ou a sua meação nos bens comuns (se casado em regime de comunhão)."
+    9.  **Dívidas e Encargos da Herança (Passivo):**
+        *   **"Valor total das dívidas e encargos da herança (Passivo):"**
+            *   Tipo: Campo numérico (`<input type="number" step="any">`) com símbolo de moeda (€).
+            *   *Abordagem Simplificada (Fase 1):* Um único campo para o valor total.
+            *   *Abordagem Detalhada (Fase Futura):* Similar aos bens, permitir adicionar múltiplas dívidas.
+        *   *Ajuda (tooltip/texto pequeno):* "Inclua empréstimos, despesas de funeral, impostos em dívida, etc."
+
+**Secção 4: Doações em Vida (Donatum)**
+
+*   **Título da Secção:** "Doações Feitas em Vida pelo Falecido"
+*   **Inputs:**
+    10. **"O falecido fez doações em vida a descendentes (filhos, netos)?"**
+        *   Tipo: Radio buttons (`<input type="radio">`)
+        *   Opções: "Sim" / "Não"
+        *   *Lógica:* Se "Sim", mostrar os próximos inputs.
+    11. **"Qual o valor total das doações feitas a descendentes?"** (Mostrar apenas se o anterior for "Sim")
+        *   Tipo: Campo numérico (`<input type="number" step="any">`) com símbolo de moeda (€).
+    12. **"Alguma dessas doações a descendentes foi feita com dispensa expressa de colação?"** (Mostrar apenas se o input 10 for "Sim")
+        *   Tipo: Radio buttons (`<input type="radio">`)
+        *   Opções: "Sim" / "Não" / "Parcialmente (algumas sim, outras não)"
+        *   *Lógica:* Se "Sim" ou "Parcialmente", pode precisar de um campo adicional.
+    13. **"Se sim ou parcialmente, qual o valor total das doações a descendentes feitas COM dispensa de colação?"** (Mostrar apenas se o input 12 for "Sim" ou "Parcialmente")
+        *   Tipo: Campo numérico (`<input type="number" step="any">`) com símbolo de moeda (€).
+        *   *Nota:* O valor das doações SEM dispensa será `(Valor Total Doações a Descendentes) - (Valor Doações COM Dispensa)`.
+    14. **"O falecido fez doações em vida a outras pessoas (que não descendentes) ou instituições?"**
+        *   Tipo: Radio buttons (`<input type="radio">`)
+        *   Opções: "Sim" / "Não"
+        *   *Lógica:* Se "Sim", mostrar o próximo input.
+    15. **"Qual o valor total dessas doações a não descendentes?"** (Mostrar apenas se o anterior for "Sim")
+        *   Tipo: Campo numérico (`<input type="number" step="any">`) com símbolo de moeda (€).
+
+**Secção 5: Detalhes do Testamento (se aplicável)**
+
+*   **Título da Secção:** "Disposições Testamentárias" (Mostrar esta secção inteira apenas se o input 1 for "Sim")
+*   **Inputs:**
+    16. **"Qual o valor total dos bens ou quotas deixados em testamento a todos os beneficiários (herdeiros ou legatários)?"**
+        *   Tipo: Campo numérico (`<input type="number" step="any">`) com símbolo de moeda (€).
+        *   *Abordagem Simplificada (Fase 1):* Um único campo para o valor total.
+        *   *Abordagem Detalhada (Fase Futura):* Permitir listar cada deixa testamentária, a quem se destina e se o beneficiário é um herdeiro legitimário ou não. Isto é importante para verificar a inoficiosidade e como a quota disponível é consumida.
+        *   *Ajuda (tooltip/texto pequeno):* "Some o valor de todos os legados e heranças instituídas no testamento."
+
+**Considerações de UX/UI para o Frontend (HTML/CSS/JS):**
+
+*   **Clareza e Simplicidade:** Use linguagem clara e evite jargão legal excessivo nos rótulos dos campos. Use os tooltips para explicações adicionais.
+*   **Progressão Lógica:** A ordem acima tenta agrupar perguntas relacionadas.
+*   **Visibilidade Condicional:** Use JavaScript para mostrar/ocultar campos com base em respostas anteriores (ex: mostrar campos de regime de bens só se "Casado(a)"). Isso evita sobrecarregar o utilizador com campos irrelevantes.
+*   **Validação de Input:** Use atributos HTML5 (`required`, `type="number"`, `min`, `max`, `pattern`) para validação básica no lado do cliente. JavaScript pode adicionar validações mais complexas.
+*   **Feedback Visual:** Indique claramente campos obrigatórios. Dê feedback sobre erros de preenchimento.
+*   **Design Responsivo:** Garanta que o formulário funciona bem em diferentes tamanhos de ecrã.
+*   **Botão de Submissão Claro:** Um botão "Calcular Simulação" ou "Ver Resultados".
+
+**No Backend (Python - Flask/Django):**
+
+*   Receberá os dados do formulário HTML.
+*   Realizará validação adicional no lado do servidor (nunCantorust client-side validation alone).
+*   Implementará a lógica de cálculo de partilhas conforme os steps que discutimos anteriormente.
+*   Enviará os resultados de volta para o frontend para serem exibidos.
+
+Esta estrutura de inputs deve fornecer uma base sólida para a sua primeira versão, mantendo o processo o mais intuitivo possível para o utilizador. Lembre-se que pode iterar e adicionar mais detalhes/complexidade em fases futuras.

@@ -1,0 +1,190 @@
+Excelente que já implementou a fase de inputs! Agora vamos para as fases seguintes, focando no backend (Python) para processar esses dados e no frontend para apresentar os resultados.
+
+**Fase 3: Desenvolvimento – Lógica de Cálculo Principal (Backend - Python)**
+
+Assumindo que o seu backend Python (Flask/Django) recebe os dados do formulário HTML, você precisará de funções para executar cada um destes passos.
+
+11. **Cálculo do Valor da Herança para a Legítima (VTH):**
+    *   **Função Python (Exemplo):** `calcular_vth(relictum, passivo, donatum_total)`
+    *   **Lógica:**
+        ```python
+        def calcular_vth(relictum_valor, passivo_valor, donatum_descendentes_total, donatum_outros_total):
+            # donatum_total = donatum_descendentes_total + donatum_outros_total
+            # (Considerar que o 'donatum' para o VTH inclui todas as doações relevantes)
+            vth = relictum_valor - passivo_valor + donatum_descendentes_total + donatum_outros_total
+            return vth
+        ```
+    *   **Inputs para a função:** Valores numéricos do relictum, passivo, e o total das doações (tanto a descendentes como a outros, pois todas entram no cálculo do VTH).
+
+12. **Determinação dos Herdeiros Legitimários e da Fração da Legítima:**
+    *   **Função Python (Exemplo):** `determinar_fracao_legitima(tem_conjuge, num_filhos, tem_ascendentes)`
+    *   **Lógica:** Implementar as regras do Código Civil:
+        ```python
+        def determinar_fracao_legitima(tem_conjuge_sobrevivo, num_filhos_vivos_ou_representados, tem_ascendentes_vivos):
+            if tem_conjuge_sobrevivo and num_filhos_vivos_ou_representados > 0:
+                return 2/3  # Cônjuge e filhos
+            elif num_filhos_vivos_ou_representados > 0: # Só filhos
+                if num_filhos_vivos_ou_representados == 1:
+                    return 1/2
+                else:
+                    return 2/3
+            elif tem_conjuge_sobrevivo and tem_ascendentes_vivos:
+                return 2/3  # Cônjuge e ascendentes
+            elif tem_conjuge_sobrevivo: # Só cônjuge
+                return 1/2
+            elif tem_ascendentes_vivos: # Só ascendentes (ex: pais)
+                # Aqui pode precisar de mais detalhe (pais vs outros ascendentes)
+                # Para simplificar, assumimos 1/2 para pais, 1/3 para outros ascendentes
+                # Se for sempre pais quando 'tem_ascendentes_vivos' é True:
+                return 1/2
+            else:
+                return 0 # Não há herdeiros legitimários (raro, mas possível)
+        ```
+    *   **Inputs para a função:** Booleanos e número de filhos (considerar os que são representados como "contando" para o número).
+
+13. **Cálculo da Quota Legítima (QL) e Quota Disponível (QD):**
+    *   **Função Python (Exemplo):** `calcular_quotas(vth, fracao_legitima)`
+    *   **Lógica:**
+        ```python
+        def calcular_quotas(vth_calculado, fracao_legitima_calculada):
+            quota_legitima = vth_calculado * fracao_legitima_calculada
+            quota_disponivel = vth_calculado - quota_legitima
+            return quota_legitima, quota_disponivel
+        ```
+
+14. **Processamento com Testamento (Se existir):**
+    *   **Função Python (Exemplo):** `processar_com_testamento(qd, ql, valor_deixas_test, vth, relictum, passivo, info_herdeiros_legitimarios, doacoes_desc_com_dispensa, doacoes_outros)`
+    *   **Lógica (Simplificada para Fase 1):**
+        1.  **Verificar Inoficiosidade:**
+            *   `liberalidades_imputaveis_na_qd = valor_deixas_test + doacoes_desc_com_dispensa + doacoes_outros`
+            *   `inoficiosidade_valor = 0`
+            *   `if liberalidades_imputaveis_na_qd > qd:`
+                *   `inoficiosidade_valor = liberalidades_imputaveis_na_qd - qd`
+                *   `valor_deixas_test_ajustado = max(0, valor_deixas_test - inoficiosidade_valor)`
+                *   (A redução real é mais complexa, começando pelas deixas testamentárias proporcionalmente, depois doações da mais recente para a mais antiga. Para a simulação, pode apenas reduzir o total das deixas ou indicar a inoficiosidade.)
+            *   `else: valor_deixas_test_ajustado = valor_deixas_test`
+        2.  **Distribuição da Quota Legítima (QL):**
+            *   Chamar uma sub-função `distribuir_ql(ql, info_herdeiros_legitimarios, vth_para_min_conjuge)`.
+            *   Esta função dividirá a QL entre os herdeiros legitimários conforme as regras (ex: cônjuge e filhos por cabeça, cônjuge não menos de 1/4 da herança – aqui, para simplificar, 1/4 da QL ou, mais corretamente, 1/4 do valor que compõe a herança a partilhar entre eles).
+            *   O `vth_para_min_conjuge` seria o `relictum - passivo` se não houvesse testamento, ou o `ql` se só se estiver a dividir a legítima. É um ponto que pode precisar de refinamento.
+        3.  **Atribuição da Quota Disponível (QD):**
+            *   Os `valor_deixas_test_ajustado` saem da QD.
+            *   O remanescente da QD (se houver) acresce à QL e é distribuído pelos herdeiros legítimos (se o testamento não especificar o destino desse remanescente). Ou, se o testamento nomeou herdeiros para a QD, eles recebem.
+    *   **Estrutura de Dados:** Precisa de uma forma de representar os herdeiros e as suas quotas (ex: um dicionário `{'conjuge': valor, 'filho1': valor}`).
+
+15. **Processamento Sem Testamento (ou testamento parcial):**
+    *   **Função Python (Exemplo):** `processar_sem_testamento(relictum, passivo, info_herdeiros_legitimarios)`
+    *   **Lógica:**
+        *   `valor_a_partilhar = relictum - passivo`
+        *   Dividir `valor_a_partilhar` entre os herdeiros legítimos identificados (cônjuge, filhos, ascendentes, etc.) de acordo com as regras da sucessão legítima (Art. 2133º e ss. CC).
+        *   Ex: Se cônjuge e N filhos: dividir por N+1, garantindo que o cônjuge recebe pelo menos 1/4 do `valor_a_partilhar`.
+
+16. **Aplicação da Colação (para descendentes):**
+    *   **Função Python (Exemplo):** `aplicar_colacao(quotas_herdeiros, doacoes_desc_sem_dispensa, info_filhos_donatarios)`
+    *   **Lógica:**
+        *   Para cada filho que recebeu doação sem dispensa de colação:
+            *   `quota_atual_filho = quotas_herdeiros['filho_X']`
+            *   `valor_doacao_filho_X = ...` (obtido dos inputs)
+            *   `quotas_herdeiros['filho_X'] = max(0, quota_atual_filho - valor_doacao_filho_X)`
+            *   Se `valor_doacao_filho_X > quota_atual_filho`, o filho não recebe mais nada desta partilha. O "excesso" da doação teoricamente beneficiaria os outros co-herdeiros na mesma proporção (isto é complexo de redistribuir numa simulação simples; pode apenas indicar que o filho já recebeu o seu valor ou mais).
+    *   **Nota:** A colação acontece *antes* da partilha final, pois o valor colacionável já foi somado ao VTH para calcular as quotas. A imputação é na quota-parte do descendente.
+
+17. **Aplicação do Direito de Representação:**
+    *   **Função Python (Exemplo):** Esta lógica deve ser integrada na determinação dos herdeiros (passo 12) e na distribuição das quotas (passos 14 ou 15).
+    *   **Lógica:**
+        *   Se um filho é pré-falecido mas deixou N descendentes, a quota que seria desse filho é dividida por N entre esses descendentes.
+        *   No frontend, você já recolheu se um filho pré-falecido deixou descendentes e quantos.
+        *   No backend, ao calcular as quotas dos "filhos", se um deles é um "grupo de representação", a sua quota-base é então subdividida.
+
+**Fase 4: Desenvolvimento – Cálculo de Impostos e Apresentação dos Resultados (Backend e Frontend)**
+
+19. **Apresentação dos Resultados (Frontend - HTML/CSS/JS):**
+    *   O backend Python (Flask/Django) enviará um objeto JSON (ou similar) com os resultados para o frontend.
+    *   **JavaScript no Frontend:** Receberá este JSON e populará dinamicamente uma secção de resultados no HTML.
+    *   **Estrutura do JSON de Resultados (Exemplo):**
+        ```json
+        {
+          "vth_calculado": 220000.00,
+          "quota_legitima": 146666.67,
+          "quota_disponivel": 73333.33,
+          "inoficiosidade_valor": 0.00, // Ou o valor se houver
+          "notas_gerais": ["Cálculo da quota do cônjuge respeitou o mínimo legal."],
+          "herdeiros_resultados": [
+            {
+              "nome": "Cônjuge Sobrevivo",
+              "tipo": "conjuge",
+              "quota_bruta_inicial": 50000.00,
+              "valor_colacionado": 0.00,
+              "quota_liquida_final": 50000.00,
+              "imposto_selo_estimado": 0.00
+            },
+            {
+              "nome": "Filho A",
+              "tipo": "filho",
+              "quota_bruta_inicial": 50000.00,
+              "valor_colacionado": 10000.00, // Exemplo de colação
+              "quota_liquida_final": 40000.00,
+              "imposto_selo_estimado": 0.00
+            },
+            {
+              "nome": "Amigo (Legatário Testamento)",
+              "tipo": "outro",
+              "quota_bruta_inicial": 20000.00,
+              "valor_colacionado": 0.00,
+              "quota_liquida_final": 20000.00,
+              "imposto_selo_estimado": 2000.00
+            }
+          ]
+        }
+        ```
+    *   **Display no HTML:**
+        *   Use tabelas ou listas bem formatadas.
+        *   Destaque os valores chave (VTH, QL, QD).
+        *   Para cada herdeiro, mostre a sua quota e o imposto estimado.
+        *   Inclua quaisquer notas ou alertas gerados pelo backend (ex: "Atenção: As deixas testamentárias foram reduzidas por inoficiosidade.").
+
+**Fase 5: Testes e Refinamento (Iterativo)**
+
+20. **Testes (Backend e Frontend):**
+    *   **Backend (Python):** Use `unittest` ou `pytest` para criar testes unitários para cada função de cálculo. Teste com diversos cenários e valores limite.
+        *   Ex: Teste `determinar_fracao_legitima` com todas as combinações de cônjuge/filhos/ascendentes.
+        *   Ex: Teste `calcular_imposto_selo` para herdeiros isentos e não isentos.
+    *   **Frontend (JS):** Teste a lógica de exibição condicional, formatação de números, e a correta apresentação dos dados recebidos do backend.
+    *   **Testes de Integração:** Teste o fluxo completo: preencher o formulário -> submeter -> backend processar -> frontend exibir resultados.
+
+21. **Melhoria da Interface e Usabilidade (UX) (Frontend):**
+    *   Peça feedback a potenciais utilizadores.
+    *   Refine os textos, a disposição dos elementos.
+    *   Considere adicionar gráficos simples se apropriado (ex: um gráfico de pizza mostrando a divisão QL/QD).
+    *   Certifique-se de que a página de resultados é clara e fácil de entender.
+
+**Fase 6: Avisos Legais e Documentação (Frontend)**
+
+22. **Aviso Legal Prominente (HTML/CSS):**
+    *   Coloque este aviso de forma bem visível na página de resultados e, idealmente, também na página de inputs.
+
+23. **Documentação (HTML):**
+    *   Crie uma página separada (ou uma secção expansível) com:
+        *   Um guia rápido de como usar a ferramenta.
+        *   Uma explicação simplificada das principais regras legais que a simulação segue (o que é legítima, quota disponível, colação, etc.).
+        *   Um glossário de termos.
+
+**Estrutura de Projeto (Python - Flask Exemplo):**
+
+```
+simulador_herancas/
+├── app.py                 # Lógica principal do Flask (rotas, etc.)
+├── calculos_heranca.py    # Módulo com todas as funções de cálculo (VTH, quotas, colação, IS, etc.)
+├── templates/
+│   ├── index.html         # Formulário de inputs
+│   └── resultados.html    # Página para exibir os resultados
+├── static/
+│   ├── css/
+│   │   └── style.css      # Estilos CSS
+│   └── js/
+│       └── script.js      # Lógica JavaScript do frontend (exibir/ocultar campos, AJAX para submeter, exibir resultados)
+└── tests/
+    ├── test_calculos_heranca.py # Testes unitários para as funções de cálculo
+```
+
+Lembre-se de que este é um processo iterativo. Comece com as funcionalidades mais críticas e vá adicionando complexidade e refinamentos à medida que avança. Boa codificação!

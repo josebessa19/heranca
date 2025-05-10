@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Partilha de Herança</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Simulador de Partilha de Herança (Legislação Portuguesa)</h1>
+        <form id="simulacaoForm">
+            <!-- Secção 1: Informação Base -->
+            <fieldset id="seccao1">
+                <legend>Secção 1: Informações sobre o Falecido</legend>
+                <div class="form-group">
+                    <label>O falecido deixou testamento?</label>
+                    <input type="radio" name="deixou_testamento" value="sim" required> Sim
+                    <input type="radio" name="deixou_testamento" value="nao" required> Não
+                </div>
+                <div class="form-group">
+                    <label for="estado_civil">Qual era o estado civil do falecido à data do óbito?</label>
+                    <select id="estado_civil" name="estado_civil" required>
+                        <option value="">Selecione...</option>
+                        <option value="solteiro">Solteiro(a)</option>
+                        <option value="casado">Casado(a)</option>
+                        <option value="unido_facto">Unido(a) de Facto</option>
+                        <option value="divorciado">Divorciado(a)</option>
+                        <option value="viuvo">Viúvo(a)</option>
+                    </select>
+                </div>
+                <div class="form-group" id="divRegimeBens" style="display: none;">
+                    <label for="regime_bens">Se casado(a), qual era o regime de bens do casamento?</label>
+                    <select id="regime_bens" name="regime_bens">
+                        <option value="">Selecione...</option>
+                        <option value="comunhao_adquiridos">Comunhão de Adquiridos</option>
+                        <option value="comunhao_geral">Comunhão Geral de Bens</option>
+                        <option value="separacao_bens">Separação de Bens</option>
+                    </select>
+                </div>
+                <button type="button" class="form-button" onclick="nextSection()">Próximo</button>
+            </fieldset>
+
+            <!-- Secção 2: Herdeiros Legitimários -->
+            <fieldset id="seccao2" style="display: none;">
+                <legend>Secção 2: Herdeiros Legitimários</legend>
+                <div id="divNomeConjuge" class="form-group" style="display: none;">
+                    <label for="nome_conjuge">Nome do Cônjuge / Companheiro(a) (se Casado(a) ou Unido(a) de Facto):</label>
+                    <input type="text" id="nome_conjuge" name="nome_conjuge" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label>O falecido deixou filhos?</label>
+                    <input type="radio" name="deixou_filhos" value="sim" required> Sim
+                    <input type="radio" name="deixou_filhos" value="nao" required> Não
+                </div>
+                <div id="divQuantosFilhos" class="form-group" style="display: none;">
+                    <label for="quantos_filhos">Quantos filhos (ou linhas de descendência por representação) deixou o falecido?</label>
+                    <input type="number" id="quantos_filhos" name="quantos_filhos" min="1" class="form-input">
+                </div>
+                <div id="camposNomesFilhos" class="form-group">
+                    <!-- Inputs para nomes dos filhos serão gerados aqui -->
+                </div>
+                <div id="divDeixouAscendentes" class="form-group" style="display: none;">
+                    <label for="deixou_ascendentes">Deixou ascendentes?</label>
+                    <input type="radio" name="deixou_ascendentes" value="sim" required> Sim
+                    <input type="radio" name="deixou_ascendentes" value="nao" required> Não
+                </div>
+
+                <div id="divTipoAscendentes" class="form-group" style="display: none;">
+                    <p>Qual o tipo de ascendentes? <span class="tooltip-trigger" title="Indique o tipo de ascendentes do grau mais próximo. Se houver pais vivos, são eles os herdeiros ascendentes. Na ausência de pais, consideram-se os avós (ou bisavós, etc.), um grau de cada vez. Esta informação é crucial pois os ascendentes de grau mais próximo preferem aos de grau mais afastado.">(?)</span></p>
+                    <label for="tipo_ascendentes_pais" class="radio-inline"><input type="radio" name="tipo_ascendentes" value="pais" id="tipo_ascendentes_pais"> Pais (um ou ambos vivos)</label>
+                    <label for="tipo_ascendentes_avos_outros" class="radio-inline"><input type="radio" name="tipo_ascendentes" value="avos_outros" id="tipo_ascendentes_avos_outros"> Apenas Avós (ou outros ascendentes de grau superior, na falta de pais)</label>
+                    
+                    <div id="divDetalhesPais" class="form-group" style="display: none; margin-left: 20px;">
+                        <label>Quantos progenitores vivos?</label><br>
+                        <label for="num_pais_um"><input type="radio" name="num_pais" value="1" id="num_pais_um"> Um</label><br>
+                        <label for="num_pais_dois"><input type="radio" name="num_pais" value="2" id="num_pais_dois"> Dois</label><br>
+                        
+                        <div id="divNomePai1" style="display: none;">
+                            <label for="nome_pai_1">Nome do Progenitor:</label>
+                            <input type="text" id="nome_pai_1" name="nome_pai_1" class="form-input">
+                        </div>
+                        <div id="divNomesPais2" style="display: none;">
+                            <label for="nome_pai_mae">Nome do Pai:</label>
+                            <input type="text" id="nome_pai_mae" name="nome_pai_mae" class="form-input"><br>
+                            <label for="nome_mae_pai">Nome da Mãe:</label> <!-- Assuming order or allowing distinct names -->
+                            <input type="text" id="nome_mae_pai" name="nome_mae_pai" class="form-input">
+                        </div>
+                    </div>
+
+                    <div id="divDetalhesAvosOutros" class="form-group" style="display: none; margin-left: 20px;">
+                        <label for="num_avos_outros">Quantos ascendentes (avós/outros) são?</label>
+                        <input type="number" id="num_avos_outros" name="num_avos_outros" min="1" class="form-input"><br>
+                        <div id="camposNomesAvosOutros">
+                            <!-- Inputs para nomes dos avos/outros ascendentes serão gerados aqui -->
+                        </div>
+                    </div>
+                </div>
+
+                <button type="button" class="form-button" onclick="previousSection()">Anterior</button>
+                <button type="button" class="form-button" onclick="nextSection()">Próximo</button>
+            </fieldset>
+
+            <!-- Secção 3: Património -->
+            <fieldset id="seccao3" style="display: none;">
+                <legend>Secção 3: Património da Herança</legend>
+                <div class="form-group">
+                    <label for="valor_bens">Valor total estimado dos bens deixados (Relictum) (€):</label>
+                    <input type="number" id="valor_bens" name="valor_bens" step="any" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label for="valor_dividas">Valor total das dívidas e encargos da herança (Passivo) (€):</label>
+                    <input type="number" id="valor_dividas" name="valor_dividas" step="any" class="form-input" required>
+                </div>
+                <button type="button" class="form-button" onclick="previousSection()">Anterior</button>
+                <button type="button" class="form-button" onclick="nextSection()">Próximo</button>
+            </fieldset>
+
+            <!-- Secção 4: Doações em Vida -->
+            <fieldset id="seccao4" style="display: none;">
+                <legend>Secção 4: Doações Feitas em Vida</legend>
+                <div class="form-group">
+                    <label>O falecido fez doações em vida a descendentes?</label>
+                    <input type="radio" name="doacoes_descendentes" value="sim" required> Sim
+                    <input type="radio" name="doacoes_descendentes" value="nao" required> Não
+                </div>
+                <div id="divValorDoacoesDescendentes" class="form-group" style="display: none;">
+                    <label for="valor_doacoes_descendentes">Qual o valor total das doações feitas a descendentes (€)?</label>
+                    <input type="number" id="valor_doacoes_descendentes" name="valor_doacoes_descendentes" step="any" class="form-input">
+                </div>
+                <div id="divDispensaColacao" class="form-group" style="display: none;">
+                    <label>Alguma dessas doações a descendentes foi feita com dispensa expressa de colação?</label>
+                    <input type="radio" name="dispensa_colacao_descendentes" value="sim"> Sim
+                    <input type="radio" name="dispensa_colacao_descendentes" value="nao"> Não
+                    <input type="radio" name="dispensa_colacao_descendentes" value="parcialmente"> Parcialmente
+                </div>
+                <div id="divValorDoacoesComDispensa" class="form-group" style="display: none;">
+                    <label for="valor_doacoes_com_dispensa">Qual o valor total das doações a descendentes feitas COM dispensa de colação (€)?</label>
+                    <input type="number" id="valor_doacoes_com_dispensa" name="valor_doacoes_com_dispensa" step="any" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label>O falecido fez doações em vida a outras pessoas (não descendentes)?</label>
+                    <input type="radio" name="doacoes_outras_pessoas" value="sim" required> Sim
+                    <input type="radio" name="doacoes_outras_pessoas" value="nao" required> Não
+                </div>
+                <div id="divValorDoacoesOutrasPessoas" class="form-group" style="display: none;">
+                    <label for="valor_doacoes_outras_pessoas">Qual o valor total dessas doações a não descendentes (€)?</label>
+                    <input type="number" id="valor_doacoes_outras_pessoas" name="valor_doacoes_outras_pessoas" step="any" class="form-input">
+                </div>
+                <button type="button" class="form-button" onclick="previousSection()">Anterior</button>
+                <button type="button" class="form-button" onclick="nextSection()">Próximo</button>
+            </fieldset>
+
+            <!-- Secção 5: Testamento (condicional) -->
+            <fieldset id="seccao5" style="display: none;">
+                <legend>Secção 5: Disposições Testamentárias</legend>
+                <div class="form-group">
+                    <label for="valor_bens_testamento">Qual o valor total dos bens ou quotas deixados em testamento (€)?</label>
+                    <input type="number" id="valor_bens_testamento" name="valor_bens_testamento" step="any" class="form-input">
+                </div>
+                <button type="button" class="form-button" onclick="previousSection()">Anterior</button>
+                <button type="button" id="btnCalcular" class="form-button">Calcular Simulação</button> 
+            </fieldset>
+        </form>
+
+        <div id="resultadosContainer" style="display: none; margin-top: 20px;">
+            <h2>Resultados da Simulação</h2>
+            <div id="resultadosConteudo">
+                <!-- Os resultados serão inseridos aqui pelo JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html> 

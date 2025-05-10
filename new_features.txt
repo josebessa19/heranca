@@ -1,0 +1,94 @@
+## Futuras Implementações e Detalhamentos para o Simulador de Herança
+
+Este documento detalha funcionalidades que foram simplificadas na versão atual ou que podem ser adicionadas para aumentar a precisão e o escopo do simulador de partilha de heranças, com sugestões para a sua implementação.
+
+**I. Granularidade de Inputs e Dados:**
+
+**1. Ascendentes (Herdeiros): Diferenciação entre Pais e Outros Ascendentes**
+    *   **Descrição Curta:** Distinguir se os ascendentes são pais (quota de 1/2 na QL, se só eles) ou outros ascendentes como avós (quota de 1/3 na QL, se só eles e na falta de pais).
+    *   **Detalhes de Implementação:**
+        *   **Frontend (`index.html`, `script.js`):**
+            *   Se `deixou_ascendentes` == "sim" (e `deixou_filhos` == "não"):
+                *   Mostrar um novo grupo de radio buttons ou dropdown (`id="tipo_ascendentes"`):
+                    *   Opções: "Pais (um ou ambos vivos)", "Apenas Avós (ou outros ascendentes de grau superior, na falta de pais)".
+        *   **Backend (`app.py`, `calculos_heranca.py`):**
+            *   `app.py`: Coletar `tipo_ascendentes`.
+            *   `calculos_heranca.py`:
+                *   Modificar `determinar_fracao_legitima`: Se herdeiros são apenas ascendentes (sem cônjuge, sem filhos), usar `tipo_ascendentes` para definir a fração (1/2 para "Pais", 1/3 para "Avós/Outros").
+                *   Se "Cônjuge e Ascendentes", a QL é 2/3. A divisão interna (entre cônjuge e ascendentes) dentro da QL também pode depender do tipo de ascendente, embora a regra geral seja 2/3 para o cônjuge e 1/3 para os ascendentes (dessa porção da QL).
+
+**2. Doações a Descendentes (Valores por Filho para Colação Precisa)**
+    *   **Descrição Curta:** Coletar o valor das doações sujeitas a colação individualmente por cada descendente donatário.
+    *   **Detalhes de Implementação:**
+        *   **Frontend (`index.html`, `script.js`):**
+            *   Na Secção 4, se `doacoes_descendentes` == "sim":
+                *   Após o campo `valor_total_doacoes_descendentes` e as opções de `dispensa_colacao_descendentes`.
+                *   Se `dispensa_colacao_descendentes` for "não" ou "parcialmente":
+                    *   Gerar dinamicamente campos de input para cada descendente (identificado por nome, vindo da Secção 2): "Valor doado a [Nome Filho X] (sujeito a colação / sem dispensa) (€)".
+                    *   A soma destes valores individuais deve ser igual a `valor_total_doacoes_descendentes - valor_doacoes_com_dispensa`. Adicionar validação para isto.
+        *   **Backend (`app.py`, `calculos_heranca.py`):**
+            *   `app.py`: Coletar estes valores, por exemplo, num dicionário `{'Nome Filho A': valor_doado_sem_dispensa, ...}` ou lista de objetos.
+            *   `calculos_heranca.py`:
+                *   A função `aplicar_colacao` deve receber esta estrutura detalhada.
+                *   Ao processar cada descendente, subtrair o valor específico da doação colacionável da sua quota individual.
+                *   A `nota_colacao` deve refletir esta imputação individualizada.
+
+**3. Detalhes do Testamento (Listagem de Deixas Testamentárias Individuais)**
+    *   **Descrição Curta:** Permitir ao utilizador listar cada deixa testamentária (legado ou herança instituída), especificando o beneficiário e o valor.
+    *   **Detalhes de Implementação:**
+        *   **Frontend (`index.html`, `script.js`):**
+            *   Na Secção 5 (Testamento), em vez do input de valor total:
+                *   Adicionar um botão "Adicionar Deixa Testamentária".
+                *   Ao clicar, adicionar dinamicamente campos para:
+                    *   "Beneficiário da Deixa" (texto).
+                    *   "Valor da Deixa (€)" (número).
+                    *   (Opcional avançado) "Tipo de Deixa" (ex: Legado, Herança, Legado por conta da legítima).
+                *   Permitir remover itens. Exibir um total corrente.
+        *   **Backend (`app.py`, `calculos_heranca.py`):**
+            *   `app.py`: Coletar como uma lista de dicionários: `deixas: [{'beneficiario': 'Nome X', 'valor': 10000}, ...]`. O `valor_bens_testamento` para os cálculos atuais seria a soma destes.
+            *   `calculos_heranca.py` (`processar_com_testamento`):
+                *   Para a redução por inoficiosidade: se implementada em detalhe (ver II.7), esta redução seria aplicada proporcionalmente a cada uma das deixas listadas.
+                *   Permite um relatório de resultados mais detalhado sobre como a QD é consumida.
+
+**4. Direito de Representação (Detalhes dos Representantes e Subdivisão de Quota)**
+    *   **Descrição Curta:** Permitir especificar quantos representantes existem para uma linha de descendência e os seus nomes, e subdividir automaticamente a quota da linha entre eles.
+    *   **Detalhes de Implementação:**
+        *   **Frontend (`index.html`, `script.js`):**
+            *   Na Secção 2, para cada "linha de descendência" (Filho N):
+                *   Adicionar uma checkbox: "[ ] Este descendente principal é pré-falecido/incapaz e os seus descendentes herdam por representação?".
+                *   Se marcada, mostrar um input numérico: "Quantos descendentes representam esta linha?".
+                *   Com base nesse número, gerar dinamicamente campos para os nomes de cada um desses representantes.
+        *   **Backend (`app.py`, `calculos_heranca.py`):**
+            *   `app.py`: Coletar esta estrutura. `nomes_filhos` poderia se tornar uma lista de objetos, e.g., `[{'nome_linha_principal': 'Filho A (pré-falecido)', 'representado_por': [{'nome': 'Neto A1'}, {'nome': 'Neto A2'}]}, {'nome_linha_principal': 'Filho B', 'representado_por': null}]`.
+            *   `calculos_heranca.py` (`distribuir_valor`):
+                *   A `quota_individual` calculada para a linha principal.
+                *   No dicionário de resultados para `descendentes`, se uma linha tem representantes, em vez de apenas o nome da linha principal e a sua quota, listar os representantes e a quota de cada um (`quota_individual_linha / numero_de_representantes`).
+                *   A `nota_distribuicao` atual seria substituída por esta apresentação detalhada.
+
+**II. Lógica de Cálculo e Nuances Legais:**
+
+**5. Inoficiosidade (Ordem Completa de Redução das Liberalidades)**
+    *   **Descrição Curta:** Implementar a ordem legal completa para redução de liberalidades inoficiosas: primeiro as deixas testamentárias (proporcionalmente), depois as doações (da mais recente para a mais antiga).
+    *   **Detalhes de Implementação (Backend - `calculos_heranca.py`):**
+        *   Requer inputs detalhados para testamento (ver I.5) e doações (idealmente com datas ou ordem de precedência para as doações).
+        *   Na função `processar_com_testamento`, se `reducao_inoficiosidade > 0`:
+            1.  **Reduzir Deixas Testamentárias:** Se há deixas testamentárias, reduzir o seu valor proporcionalmente até o limite da `reducao_inoficiosidade` ou até se esgotarem.
+            2.  **Reduzir Doações (se a inoficiosidade persistir):**
+                *   Esta é a parte mais complexa. As doações a não herdeiros legitimários e as doações a legitimários com dispensa de colação são as que podem ser reduzidas por inoficiosidade.
+                *   A redução começa pela doação mais recente. Sem datas, o simulador teria que pedir uma ordem ou aplicar uma regra simplificada (ex: reduzir primeiro as doações a não legitimários, depois as com dispensa).
+                *   Para cada doação reduzida, o seu valor efetivo é recalculado.
+        *   O resultado final mostraria os valores ajustados para cada deixa e doação afetada.
+
+**6. Valor das Doações (Reavaliação à Data da Abertura da Sucessão)**
+    *   **Descrição Curta:** Idealmente, os valores das doações (para VTH e colação) devem ser os valores dos bens à data da abertura da sucessão, não à data da doação.
+    *   **Detalhes de Implementação:**
+        *   **Frontend:** A forma mais simples é adicionar uma nota de aviso proeminente nos campos de input de doações: "Recomenda-se que o valor inserido para as doações seja o valor do bem à data do óbito. Se não for possível, insira o valor à data da doação, mas note que o cálculo pode não ser exato."
+        *   **Backend:** Nenhuma alteração de cálculo, pois o sistema usará os valores fornecidos. A precisão depende da entrada do utilizador. Uma funcionalidade avançada (e muito complexa) poderia ser integrar índices de atualização, mas isso está fora do escopo de uma simulação simples.
+
+**7. União de Facto (Direitos Sucessórios Específicos)**
+    *   **Descrição Curta:** Refinar a lógica para refletir com mais precisão os direitos sucessórios do unido de facto, que podem diferir do cônjuge em certas circunstâncias (especialmente quanto à qualidade de herdeiro legitimário).
+    *   **Detalhes de Implementação (Backend - `calculos_heranca.py`):**
+        *   Requer pesquisa jurídica aprofundada. O unido de facto só é chamado à herança (e considerado legitimário) sob condições específicas, como a inexistência de outros herdeiros de classes prioritárias ou a necessidade de alimentos.
+        *   As funções `determinar_fracao_legitima` e `distribuir_valor` precisariam de lógica condicional baseada no `estado_civil` == "unido_facto" e nas outras classes de herdeiros presentes.
+        *   Pode ser necessário um conjunto de regras distinto para a união de facto.
+        *   **Nota:** Esta é uma alteração legalmente complexa. A simplificação atual (tratar como cônjuge para fins de quota se `conjuge_sobrevivo` está marcado) é uma aproximação.
