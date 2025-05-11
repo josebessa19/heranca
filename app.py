@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify, render_template
 import os
 # Assuming calculos_heranca.py is in the same directory or accessible via PYTHONPATH
 import calculos_heranca
+from decimal import Decimal
 
 app = Flask(__name__, template_folder='.', static_folder='static')
 
@@ -32,10 +33,13 @@ def calculate_inheritance_route():
         conjuge_sobrevivo = data.get('estado_civil') == 'casado' or data.get('estado_civil') == 'unido_facto'
         nome_conjuge = data.get('nome_conjuge', 'Cônjuge/Companheiro(a)') if conjuge_sobrevivo else None
         deixou_filhos = data.get('deixou_filhos') == 'sim'
-        num_filhos_str = data.get('num_filhos', '0')
+        
+        # Correctly get 'quantos_filhos' from the form data
+        num_filhos_str = data.get('quantos_filhos', '0') 
         num_filhos = int(num_filhos_str) if num_filhos_str.isdigit() else 0
         nomes_filhos = data.get('nomes_filhos', [])
         deixou_ascendentes_input = data.get('deixou_ascendentes') # sim, nao, ou None
+        deixou_ascendentes = deixou_ascendentes_input == 'sim' # Define boolean based on input
         tipo_ascendentes = data.get('tipo_ascendentes') # pais, avos_outros, or None
 
         # Detailed ascendant info
@@ -70,88 +74,87 @@ def calculate_inheritance_route():
         relictum = float(data.get('valor_bens', 0))
         passivo = float(data.get('valor_dividas', 0))
 
-        # Extract donations
-        doacoes_descendentes_sim = data.get('doacoes_descendentes') == 'sim'
-        total_doacoes_descendentes = float(data.get('valor_doacoes_descendentes', 0)) if doacoes_descendentes_sim else 0
+        # Extract donations - REVISED FOR SIMPLIFIED FLOW
+        doacoes_a_herdeiros_presentes = data.get('doacoes_herdeiros') == 'sim'
         
-        dispensa_colacao_desc = data.get('dispensa_colacao_descendentes', 'nao') if doacoes_descendentes_sim else 'nao'
-        doacoes_desc_com_dispensa = 0
-        if doacoes_descendentes_sim and (dispensa_colacao_desc == 'sim' or dispensa_colacao_desc == 'parcialmente'):
-            doacoes_desc_com_dispensa = float(data.get('valor_doacoes_com_dispensa', 0))
-        
-        doacoes_desc_sem_dispensa_total = total_doacoes_descendentes - doacoes_desc_com_dispensa
-        if doacoes_desc_sem_dispensa_total < 0: # Should not happen with proper input validation
-            doacoes_desc_sem_dispensa_total = 0 
+        valor_total_global_doacoes_herdeiros = Decimal(data.get('valor_total_global_doacoes_herdeiros', '0'))
+        doacoes_individuais_herdeiros_com_dispensa = data.get('doacoes_individuais_herdeiros_com_dispensa', {})
+        doacoes_individuais_herdeiros_sem_dispensa = data.get('doacoes_individuais_herdeiros_sem_dispensa', {})
 
-        doacoes_outras_pessoas_sim = data.get('doacoes_outras_pessoas') == 'sim'
-        total_doacoes_outras_pessoas = float(data.get('valor_doacoes_outras_pessoas', 0)) if doacoes_outras_pessoas_sim else 0
+        # Logging the received donation details
+        app.logger.info(f"[DEBUG] Doações a Herdeiros Presentes: {doacoes_a_herdeiros_presentes}")
+        app.logger.info(f"[DEBUG] Valor Total Global Doações Herdeiros: {valor_total_global_doacoes_herdeiros}")
+        app.logger.info(f"[DEBUG] Doações Individuais Herdeiros COM Dispensa: {doacoes_individuais_herdeiros_com_dispensa}")
+        app.logger.info(f"[DEBUG] Doações Individuais Herdeiros SEM Dispensa: {doacoes_individuais_herdeiros_sem_dispensa}")
+
+        doacoes_outras_pessoas = data.get('doacoes_outras_pessoas') == 'sim'
+        total_doacoes_outras_pessoas = Decimal(data.get('valor_doacoes_outras_pessoas', '0')) if doacoes_outras_pessoas else Decimal('0')
 
         # Extract testament info
-        valor_bens_testamento = float(data.get('valor_bens_testamento', 0)) if deixou_testamento else 0
+        valor_bens_testamento = Decimal(data.get('valor_bens_testamento', '0')) if deixou_testamento else Decimal('0')
 
         # 1. Calcular VTH (Valor Total da Herança para cálculo da legítima)
-        vth_calculado = calculos_heranca.calcular_vth(
-            relictum_valor=relictum,
-            passivo_valor=passivo,
-            donatum_descendentes_total=total_doacoes_descendentes, # Correct: total donations to descendants for VTH
-            donatum_outros_total=total_doacoes_outras_pessoas
-        )
-
-        # 2. Determinar Fração da Legítima (QL) e Quota Disponível (QD)
-        fracao_legitima, fracao_display = calculos_heranca.determinar_fracao_legitima(
-            conjuge_sobrevivo=conjuge_sobrevivo,
+        vth, fracao_legitima, fracao_legitima_display, ql, qd = calculos_heranca.calcular_vth_e_quotas(
+            relictum=relictum,
+            passivo=passivo,
+            donatum_herdeiros_total=valor_total_global_doacoes_herdeiros,
+            donatum_outros_total=total_doacoes_outras_pessoas,
+            conjuge_sobrevive=conjuge_sobrevivo,
             num_filhos=num_filhos,
-            deixou_ascendentes=deixou_ascendentes,
+            ascendentes_presentes=deixou_ascendentes,
             tipo_ascendentes=tipo_ascendentes
         )
-        quota_legitima_valor, quota_disponivel_valor = calculos_heranca.calcular_quotas(
-            vth=vth_calculado,
-            fracao_legitima=fracao_legitima
-        )
 
-        # 3. Processar a herança (com ou sem testamento)
+        # 2. Processar a herança (com ou sem testamento)
         if deixou_testamento:
             processamento_resultado = calculos_heranca.processar_com_testamento(
-                vth=vth_calculado,
-                quota_legitima_valor=quota_legitima_valor,
-                quota_disponivel_valor=quota_disponivel_valor,
-                valor_deixas_testamento=valor_bens_testamento,
-                conjuge_sobrevivo=conjuge_sobrevivo,
-                nome_conjuge=nome_conjuge,
-                num_filhos=num_filhos,
-                nomes_filhos=nomes_filhos,
-                deixou_ascendentes=deixou_ascendentes,
-                doacoes_desc_com_dispensa=doacoes_desc_com_dispensa, # Pass this for inoficiosidade check
-                doacoes_outros_total_para_qd=total_doacoes_outras_pessoas, # Pass this for inoficiosidade check
-                tipo_ascendentes=tipo_ascendentes,
-                num_pais=num_pais, nomes_pais=nomes_pais,
-                num_avos_outros=num_avos_outros, nomes_avos_outros=nomes_avos_outros
+                relictum=relictum,
+                passivo=passivo,
+                valor_bens_testamento=valor_bens_testamento,
+                vth=vth,
+                ql=ql,
+                qd=qd,
+                fracao_legitima_calc=fracao_legitima,
+                conjuge_info=(conjuge_sobrevivo, nome_conjuge),
+                descendentes_info=(num_filhos, nomes_filhos),
+                ascendentes_info=(deixou_ascendentes, tipo_ascendentes, num_pais, nomes_pais, num_avos_outros, nomes_avos_outros),
+                doacoes_herdeiros_com_dispensa_detalhado=doacoes_individuais_herdeiros_com_dispensa,
+                doacoes_herdeiros_sem_dispensa_detalhado=doacoes_individuais_herdeiros_sem_dispensa,
+                doacoes_outros_total_para_qd=total_doacoes_outras_pessoas,
+                regime_bens=regime_bens,
+                estado_civil=estado_civil
             )
         else:
+            # No testamento processing path
             processamento_resultado = calculos_heranca.processar_sem_testamento(
-                vth=vth_calculado, # Added VTH based on previous corrections for context
-                quota_legitima=quota_legitima_valor, # Corrected name from QL to quota_legitima
-                quota_disponivel=quota_disponivel_valor, # Added QD for context
-                conjuge_sobrevive=conjuge_sobrevivo,
-                nome_conjuge=nome_conjuge,
-                num_filhos_para_calculo=num_filhos,
-                nomes_filhos=nomes_filhos,
-                deixou_ascendentes=deixou_ascendentes,
-                relictum=relictum, 
-                passivo=passivo,    
-                tipo_ascendentes=tipo_ascendentes,
-                num_pais=num_pais, nomes_pais=nomes_pais,
-                num_avos_outros=num_avos_outros, nomes_avos_outros=nomes_avos_outros
+                vth=vth,
+                ql=ql,
+                qd=qd,
+                fracao_legitima_calc=fracao_legitima,
+                conjuge_info=(conjuge_sobrevivo, nome_conjuge),
+                descendentes_info=(num_filhos, nomes_filhos),
+                ascendentes_info=(deixou_ascendentes, tipo_ascendentes, num_pais, nomes_pais, num_avos_outros, nomes_avos_outros),
+                doacoes_herdeiros_com_dispensa_detalhado=doacoes_individuais_herdeiros_com_dispensa,
+                doacoes_herdeiros_sem_dispensa_detalhado=doacoes_individuais_herdeiros_sem_dispensa,
+                doacoes_outros_total_para_qd=total_doacoes_outras_pessoas,
+                regime_bens=regime_bens,
+                estado_civil=estado_civil,
+                relictum=relictum,
+                passivo=passivo
             )
         
-        # 4. Aplicar Colação
-        # quotas_herdeiros_base comes from processamento_resultado
-        colacao_resultado = calculos_heranca.aplicar_colacao(
-            quotas_herdeiros_base=processamento_resultado.get('quotas_herdeiros_base', {}),
-            total_doacoes_desc_sem_dispensa_para_colacao=doacoes_desc_sem_dispensa_total,
-            num_linhas_descendencia=num_filhos, # num_filhos represents lines of descent
-            vth=vth_calculado # Pass VTH for context if needed in future colation adjustments
-        )
+        # 4. Aplicar Colação - This logic will now be integrated into processar_com/sem_testamento
+        # The 'colacao_info' will be part of the 'processamento_resultado' from those functions.
+        # Therefore, the explicit call to aplicar_colacao is removed.
+        
+        # colacao_resultado = calculos_heranca.aplicar_colacao(
+        #     quotas_herdeiros_base=processamento_resultado.get('quotas_herdeiros_base', {}),
+        #     detalhes_doacoes_desc_sem_dispensa=doacoes_individuais_desc_sem_dispensa_val,
+        #     num_linhas_descendencia=num_filhos, 
+        #     vth=vth_calculado 
+        # )
+        # Assuming colacao_info is now part of processamento_resultado
+        colacao_info = processamento_resultado.get('colacao_info', {})
 
         # Echo back some form data for easier display or debugging on frontend
         form_data_echo = {
@@ -161,13 +164,13 @@ def calculate_inheritance_route():
         }
 
         response_data = {
-            'VTH': vth_calculado,
+            'VTH': vth,
             'fracao_legitima': fracao_legitima, 
-            'fracao_legitima_display': fracao_display,
-            'QL': quota_legitima_valor,
-            'QD': quota_disponivel_valor,
-            'processamento_heranca': processamento_resultado,
-            'colacao_info': colacao_resultado,
+            'fracao_legitima_display': fracao_legitima_display,
+            'QL': ql,
+            'QD': qd,
+            'processamento_heranca': processamento_resultado, # This should now contain all necessary share details
+            'colacao_info': colacao_info, # Extracted from processamento_resultado
             'form_data_echo': form_data_echo,
             'detailed_ascendants_echo': { # Echoing new ascendant details for confirmation
                 'tipo_ascendentes': tipo_ascendentes,

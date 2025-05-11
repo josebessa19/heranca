@@ -118,26 +118,31 @@
 
             <!-- Secção 4: Doações em Vida -->
             <fieldset id="seccao4" style="display: none;">
-                <legend>Secção 4: Doações Feitas em Vida</legend>
+                <legend>Secção 4: Doações Feitas em Vida e Passivo (Dívidas)</legend>
                 <div class="form-group">
-                    <label>O falecido fez doações em vida a descendentes?</label>
-                    <input type="radio" name="doacoes_descendentes" value="sim" required> Sim
-                    <input type="radio" name="doacoes_descendentes" value="nao" required> Não
+                    <label>O falecido fez doações em vida a herdeiros legitimários (cônjuge, descendentes, ascendentes)?</label>
+                    <div class="radio-group">
+                        <input type="radio" id="doacoes_herdeiros_sim" name="doacoes_herdeiros" value="sim" required>
+                        <label for="doacoes_herdeiros_sim">Sim</label>
+                        <input type="radio" id="doacoes_herdeiros_nao" name="doacoes_herdeiros" value="nao" required>
+                        <label for="doacoes_herdeiros_nao">Não</label>
+                    </div>
                 </div>
-                <div id="divValorDoacoesDescendentes" class="form-group" style="display: none;">
-                    <label for="valor_doacoes_descendentes">Qual o valor total das doações feitas a descendentes (€)?</label>
-                    <input type="number" id="valor_doacoes_descendentes" name="valor_doacoes_descendentes" step="any" class="form-input">
+
+                <div id="divDetalhesDoacoesHerdeiros" style="display:none; margin-left: 20px; padding: 10px; border: 1px solid #eee; margin-bottom:15px;">
+                    <div class="form-group">
+                        <label for="inputValorTotalGlobalDoacoesHerdeiros">Valor TOTAL GLOBAL das doações feitas a Herdeiros Legitimários (€):</label>
+                        <input type="number" id="inputValorTotalGlobalDoacoesHerdeiros" name="valor_total_global_doacoes_herdeiros" class="form-input" step="any" min="0">
+                        <small>Este é o valor total de todas as doações (com ou sem dispensa de colação) feitas a todos os herdeiros legitimários.</small>
+                    </div>
+
+                    <div id="divCamposIndividuaisDoacoesHerdeiros">
+                        <p><strong>Detalhe das Doações por Herdeiro:</strong></p>
+                        <small>Para cada herdeiro legitimário indicado na Secção 2, especifique o valor doado COM dispensa de colação e o valor doado SEM dispensa de colação (sujeito a colação). A soma de todas estas doações individuais deve igualar o "Valor TOTAL GLOBAL" acima.</small>
+                        <!-- Campos dinâmicos para cada herdeiro serão gerados aqui pelo JavaScript -->
+                    </div>
                 </div>
-                <div id="divDispensaColacao" class="form-group" style="display: none;">
-                    <label>Alguma dessas doações a descendentes foi feita com dispensa expressa de colação?</label>
-                    <input type="radio" name="dispensa_colacao_descendentes" value="sim"> Sim
-                    <input type="radio" name="dispensa_colacao_descendentes" value="nao"> Não
-                    <input type="radio" name="dispensa_colacao_descendentes" value="parcialmente"> Parcialmente
-                </div>
-                <div id="divValorDoacoesComDispensa" class="form-group" style="display: none;">
-                    <label for="valor_doacoes_com_dispensa">Qual o valor total das doações a descendentes feitas COM dispensa de colação (€)?</label>
-                    <input type="number" id="valor_doacoes_com_dispensa" name="valor_doacoes_com_dispensa" step="any" class="form-input">
-                </div>
+
                 <div class="form-group">
                     <label>O falecido fez doações em vida a outras pessoas (não descendentes)?</label>
                     <input type="radio" name="doacoes_outras_pessoas" value="sim" required> Sim
